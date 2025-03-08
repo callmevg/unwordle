@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unwordle - Wordle Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            border: 2px solid #d3d6da;
+            cursor: pointer;
+            outline: none;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+        }
+        .cell.green {
+            background-color: #6aaa64;
+            border-color: #6aaa64;
+            color: white;
+        }
+        .cell.yellow {
+            background-color: #c9b458;
+            border-color: #c9b458;
+            color: white;
+        }
+        .cell.gray {
+            background-color: #787c7e;
+            border-color: #787c7e;
+            color: white;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #538d4e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #406c3b;
+        }
+        .instructions {
+            margin: 20px 0;
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+        }
+        #results {
+            margin-top: 30px;
+            text-align: left;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .word-chip {
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        #message {
+            color: #d23f31;
+            font-weight: bold;
+            min-height: 20px;
+            margin: 10px 0;
+        }
+        h1 {
+            color: #538d4e;
+        }
+    </style>
+</head>
+<body>
+    <h1>Unwordle - Wordle Solver</h1>
+    <div class="instructions">
+        <p>1. Type your Wordle guesses in each row</p>
+        <p>2. Click on each letter to change its color based on Wordle feedback:</p>
+        <p>⚪ → 🟩 (correct spot) → 🟨 (wrong spot) → ⚫ (not in word)</p>
+        <p>3. Click "Solve" to get word suggestions</p>
+    </div>
+    
+    <div id="wordleGrid" class="grid"></div>
+    
+    <div>
+        <button id="solveBtn">Solve</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+    
+    <p id="message"></p>
+    
+    <div id="results" style="display: none;">
+        <h2>Results</h2>
+        <p>Possible words: <span id="wordCount">0</span></p>
+        <div id="suggestions"></div>
+    </div>
+
+    <script>
+        // Constants for color feedback
+        const CORRECT = 'green';
+        const PRESENT = 'yellow';
+        const ABSENT = 'gray';
+        
+        // Best starting words based on letter frequency
+        const START_WORDS = [
+            "STARE", "CRANE", "SLATE", "ARISE", "RAISE", 
+            "AUDIO", "ADIEU", "TRACE", "ROAST", "OUIJA"
+        ];
+        
+        // Global cache for word list
+        let wordListCache = null;
+        
+        // DOM elements
+        const wordleGrid = document.getElementById('wordleGrid');
+        const solveBtn = document.getElementById('solveBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const message = document.getElementById('message');
+        const results = document.getElementById('results');
+        const wordCount = document.getElementById('wordCount');
+        const suggestions = document.getElementById('suggestions');
+        
+        // Create the grid (6 rows, 5 columns)
+        function createGrid() {
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.contentEditable = true;
+                    
+                    // Handle input (only allow single letter)
+                    cell.addEventListener('input', (e) => {
+                        const text = e.target.innerText.toUpperCase();
+                        if (text.length > 0) {
+                            e.target.innerText = text[text.length - 1];
+                        }
+                        if (text && /^[A-Z]$/.test(text)) {
+                            // Move to next cell
+                            const nextCell = document.querySelector(`[data-row="${i}"][data-col="${j + 1}"]`);
+                            if (nextCell) nextCell.focus();
+                        }
+                    });
+                    
+                    // Handle color cycling
+                    cell.addEventListener('click', (e) => {
+                        if (e.target.innerText.trim() === '') return;
+                        
+                        if (!cell.classList.contains('green') && 
+                            !cell.classList.contains('yellow') && 
+                            !cell.classList.contains('gray')) {
+                            cell.classList.add('green');
+                        } else if (cell.classList.contains('green')) {
+                            cell.classList.remove('green');
+                            cell.classList.add('yellow');
+                        } else if (cell.classList.contains('yellow')) {
+                            cell.classList.remove('yellow');
+                            cell.classList.add('gray');
+                        } else {
+                            cell.classList.remove('gray');
+                        }
+                    });
+                    
+                    // Handle keyboard navigation
+                    cell.addEventListener('keydown', (e) => {
+                        let nextRow = i, nextCol = j;
+                        
+                        switch (e.key) {
+                            case 'ArrowRight': nextCol++; break;
+                            case 'ArrowLeft': nextCol--; break;
+                            case 'ArrowUp': nextRow--; break;
+                            case 'ArrowDown': nextRow++; break;
+                            case 'Backspace':
+                                if (e.target.innerText === '') {
+                                    nextCol--;
+                                    e.preventDefault();
+                                }
+                                break;
+                        }
+                        
+                        const nextCell = document.querySelector(`[data-row="${nextRow}"][data-col="${nextCol}"]`);
+                        if (nextCell && e.key.startsWith('Arrow')) {
+                            nextCell.focus();
+                            e.preventDefault();
+                        }
+                    });
+                    
+                    wordleGrid.appendChild(cell);
+                }
+            }
+        }
+        
+        // Load words from the JSON file
+        async function loadWordList() {
+            if (wordListCache) return wordListCache;
+            
+            try {
+                console.log("Loading words from words.json...");
+                const response = await fetch('words.json');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load words.json: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log("Successfully loaded words.json");
+                
+                // Extract words from different possible JSON formats
+                let words = [];
+                if (Array.isArray(data)) {
+                    words = data;
+                    console.log("Loaded words from array format");
+                } else if (typeof data === 'object') {
+                    words = Object.keys(data);
+                    console.log("Loaded words from object keys");
+                } else {
+                    throw new Error(`Unexpected data format in words.json: ${typeof data}`);
+                }
+                
+                // Filter to ensure all words are 5 letters
+                const filteredWords = words.filter(word => word && word.length === 5);
+                console.log(`Found ${filteredWords.length} valid 5-letter words out of ${words.length} total`);
+                
+                if (filteredWords.length === 0) {
+                    throw new Error("No valid 5-letter words found in words.json");
+                }
+                
+                // Convert to uppercase
+                wordListCache = filteredWords.map(word => word.toUpperCase());
+                console.log(`Successfully loaded ${wordListCache.length} words`);
+                
+                return wordListCache;
+            } catch (error) {
+                console.error('Error loading words.json:', error);
+                message.textContent = `Error: ${error.message}. Check that words.json exists and contains valid words.`;
+                throw error; // Re-throw to halt execution instead of falling back
+            }
+        }
+        
+        // Get guesses from the grid
+        function getGuesses() {
+            const guesses = [];
+            
+            // Check each row
+            for (let i = 0; i < 6; i++) {
+                let rowWord = '';
+                const rowFeedback = [];
+                let hasLetter = false;
+                
+                // Check each cell in the row
+                for (let j = 0; j < 5; j++) {
+                    const cell = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                    const letter = cell.innerText.trim().toUpperCase();
+                    
+                    if (letter) {
+                        hasLetter = true;
+                        rowWord += letter;
+                        
+                        // Get color feedback
+                        if (cell.classList.contains('green')) {
+                            rowFeedback.push(CORRECT);
+                        } else if (cell.classList.contains('yellow')) {
+                            rowFeedback.push(PRESENT);
+                        } else if (cell.classList.contains('gray')) {
+                            rowFeedback.push(ABSENT);
+                        } else {
+                            rowFeedback.push('');
+                        }
+                    } else {
+                        rowWord += ' ';
+                        rowFeedback.push('');
+                    }
+                }
+                
+                // Only add rows with letters
+                if (hasLetter) {
+                    guesses.push({
+                        row: i,
+                        word: rowWord,
+                        feedback: rowFeedback
+                    });
+                }
+            }
+            
+            return guesses;
+        }
+        
+        // Check if all letters have colors
+        function validateGuesses(guesses) {
+            for (const guess of guesses) {
+                // Check if any row has incomplete words
+                if (guess.word.includes(' ')) {
+                    return {
+                        valid: false,
+                        message: `Row ${guess.row + 1} has incomplete letters. Fill all 5 letters.`
+                    };
+                }
+                
+                // Check if any letter is missing color
+                if (guess.feedback.includes('')) {
+                    return {
+                        valid: false,
+                        message: `Row ${guess.row + 1} has letters without colors. Click each letter to set its color.`
+                    };
+                }
+            }
+            
+            return { valid: true };
+        }
+        
+        // Filter words based on guesses
+        function filterWordList(wordList, guesses) {
+            return wordList.filter(word => {
+                return guesses.every(guess => {
+                    const guessWord = guess.word.replace(/ /g, '');
+                    const feedback = guess.feedback.filter(f => f !== '');
+                    
+                    // Check each letter position
+                    for (let i = 0; i < guessWord.length; i++) {
+                        if (feedback[i] === CORRECT && word[i] !== guessWord[i]) {
+                            return false; // Green letter doesn't match
+                        }
+                        
+                        if (feedback[i] === PRESENT && word[i] === guessWord[i]) {
+                            return false; // Yellow letter can't be in same position
+                        }
+                    }
+                    
+                    // Track letter counts for yellow/gray validation
+                    const wordLetterCounts = {};
+                    for (const letter of word) {
+                        wordLetterCounts[letter] = (wordLetterCounts[letter] || 0) + 1;
+                    }
+                    
+                    // Count minimum required letters (green + yellow positions)
+                    const requiredLetterCounts = {};
+                    for (let i = 0; i < guessWord.length; i++) {
+                        if (feedback[i] === CORRECT || feedback[i] === PRESENT) {
+                            const letter = guessWord[i];
+                            requiredLetterCounts[letter] = (requiredLetterCounts[letter] || 0) + 1;
+                        }
+                    }
+                    
+                    // Verify all required letters exist in sufficient quantities
+                    for (const letter in requiredLetterCounts) {
+                        if ((wordLetterCounts[letter] || 0) < requiredLetterCounts[letter]) {
+                            return false; // Not enough of a required letter
+                        }
+                    }
+                    
+                    // Check gray letters - each gray letter means either:
+                    // 1. The letter isn't in the word at all, or
+                    // 2. We've already accounted for all instances of this letter with green/yellow
+                    for (let i = 0; i < guessWord.length; i++) {
+                        if (feedback[i] === ABSENT) {
+                            const letter = guessWord[i];
+                            const requiredCount = requiredLetterCounts[letter] || 0;
+                            
+                            if (requiredCount === 0 && word.includes(letter)) {
+                                return false; // Gray letter shouldn't be present
+                            } else if ((wordLetterCounts[letter] || 0) > requiredCount) {
+                                return false; // Too many instances of this letter
+                            }
+                        }
+                    }
+                    
+                    return true;
+                });
+            });
+        }
+        
+        // Get best suggestions based on letter frequency
+        function getBestSuggestions(words, count = 10) {
+            if (words.length === 0) return [];
+            if (words.length <= count) return words;
+            
+            // Simple scoring based on letter frequency among possibilities
+            const letterFreq = {};
+            words.forEach(word => {
+                [...new Set(word.split(''))].forEach(letter => {
+                    letterFreq[letter] = (letterFreq[letter] || 0) + 1;
+                });
+            });
+            
+            // Score words by unique letter frequency
+            return words
+                .map(word => {
+                    const uniqueLetters = [...new Set(word.split(''))];
+                    const score = uniqueLetters.reduce((sum, letter) => sum + letterFreq[letter], 0);
+                    return { word, score };
+                })
+                .sort((a, b) => b.score - a.score)
+                .slice(0, count)
+                .map(entry => entry.word);
+        }
+        
+        // Handle the solve button click
+        async function handleSolve() {
+            message.textContent = '';
+            results.style.display = 'none';
+            
+            try {
+                const wordList = await loadWordList();
+                
+                // Only proceed if we have words
+                if (!wordList || wordList.length === 0) {
+                    message.textContent = 'Error: No words loaded from words.json';
+                    return;
+                }
+                
+                const guesses = getGuesses();
+                
+                // Case A: No input, suggest starting words from the word list
+                if (guesses.length === 0) {
+                    // Get good starting words from the word list based on letter frequency
+                    const startWords = getGoodStartingWords(wordList);
+                    
+                    results.style.display = 'block';
+                    wordCount.textContent = startWords.length;
+                    suggestions.innerHTML = '';
+                    startWords.forEach(word => {
+                        const chip = document.createElement('span');
+                        chip.className = 'word-chip';
+                        chip.textContent = word;
+                        suggestions.appendChild(chip);
+                    });
+                    return;
+                }
+                
+                // Case B: Input without complete color coding
+                const validation = validateGuesses(guesses);
+                if (!validation.valid) {
+                    message.textContent = validation.message;
+                    return;
+                }
+                
+                // Case C: Process input with color coding
+                const filteredWords = filterWordList(wordList, guesses);
+                const bestWords = getBestSuggestions(filteredWords, 20);
+                
+                results.style.display = 'block';
+                wordCount.textContent = filteredWords.length;
+                suggestions.innerHTML = '';
+                
+                if (bestWords.length === 0) {
+                    const chip = document.createElement('span');
+                    chip.className = 'word-chip';
+                    chip.textContent = 'No matching words found';
+                    suggestions.appendChild(chip);
+                } else {
+                    bestWords.forEach(word => {
+                        const chip = document.createElement('span');
+                        chip.className = 'word-chip';
+                        chip.textContent = word;
+                        suggestions.appendChild(chip);
+                    });
+                }
+            } catch (error) {
+                console.error('Error processing results:', error);
+                message.textContent = 'Error finding matches. Make sure words.json exists and is valid.';
+            }
+        }
+        
+        // Get good starting words from the word list
+        function getGoodStartingWords(wordList) {
+            // If we have hardcoded good starting words and they exist in our word list, use them
+            const knownGoodStarts = ["STARE", "CRANE", "SLATE", "ARISE", "RAISE", "AUDIO", "ADIEU", "TRACE"];
+            const validKnownStarts = knownGoodStarts.filter(word => wordList.includes(word));
+            
+            if (validKnownStarts.length >= 5) {
+                return validKnownStarts;
+            }
+            
+            // Otherwise, find words with good letter distribution
+            const letterFreq = {};
+            const vowels = new Set(['A', 'E', 'I', 'O', 'U']);
+            
+            // Count letter frequencies
+            wordList.forEach(word => {
+                const uniqueLetters = [...new Set(word.split(''))];
+                uniqueLetters.forEach(letter => {
+                    letterFreq[letter] = (letterFreq[letter] || 0) + 1;
+                });
+            });
+            
+            // Score words based on unique letters and vowel/consonant balance
+            return wordList
+                .map(word => {
+                    const letters = [...new Set(word.split(''))];
+                    const uniqueLetterCount = letters.length;
+                    const hasVowels = letters.some(l => vowels.has(l));
+                    const vowelCount = letters.filter(l => vowels.has(l)).length;
+                    const consonantCount = uniqueLetterCount - vowelCount;
+                    
+                    // Words with 5 unique letters and a mix of vowels/consonants score highest
+                    let score = letters.reduce((sum, letter) => sum + letterFreq[letter], 0);
+                    
+                    // Prefer words with 2-3 vowels (not too many, not too few)
+                    if (vowelCount >= 2 && vowelCount <= 3) score += 1000;
+                    
+                    // Prefer words with all unique letters
+                    if (uniqueLetterCount === 5) score += 2000;
+                    
+                    return { word, score };
+                })
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10)
+                .map(entry => entry.word);
+        }
+        
+        // Reset the grid
+        function handleReset() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerText = '';
+                cell.classList.remove('green', 'yellow', 'gray');
+            });
+            message.textContent = '';
+            results.style.display = 'none';
+        }
+        
+        // Initialize the app
+        function init() {
+            createGrid();
+            solveBtn.addEventListener('click', handleSolve);
+            resetBtn.addEventListener('click', handleReset);
+            
+            // Pre-load word list
+            loadWordList();
+        }
+        
+        // Start the app when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
