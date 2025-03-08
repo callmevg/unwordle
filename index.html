@@ -196,18 +196,41 @@
                             case 'ArrowLeft': nextCol--; break;
                             case 'ArrowUp': nextRow--; break;
                             case 'ArrowDown': nextRow++; break;
+                            case 'Enter':
+                                // Prevent default behavior which clears the cell
+                                e.preventDefault();
+                                
+                                // Optional: Move to next row, first column
+                                if (j === 4) { // If at last column
+                                    const nextRowCell = document.querySelector(`[data-row="${i+1}"][data-col="0"]`);
+                                    if (nextRowCell) {
+                                        nextRowCell.focus();
+                                    }
+                                }
+                                return;
                             case 'Backspace':
                                 if (e.target.innerText === '') {
+                                    // If current cell is empty, move to previous cell AND clear it
                                     nextCol--;
-                                    e.preventDefault();
+                                    const prevCell = document.querySelector(`[data-row="${nextRow}"][data-col="${nextCol}"]`);
+                                    if (prevCell) {
+                                        prevCell.innerText = '';
+                                        prevCell.focus();
+                                        e.preventDefault(); // Prevent default backspace
+                                    }
+                                    return; // Exit early after handling
                                 }
-                                break;
+                                // For cells with content, let default backspace behavior happen
+                                return;
                         }
                         
-                        const nextCell = document.querySelector(`[data-row="${nextRow}"][data-col="${nextCol}"]`);
-                        if (nextCell && e.key.startsWith('Arrow')) {
-                            nextCell.focus();
-                            e.preventDefault();
+                        // Handle navigation for arrow keys
+                        if (e.key.startsWith('Arrow')) {
+                            const nextCell = document.querySelector(`[data-row="${nextRow}"][data-col="${nextCol}"]`);
+                            if (nextCell) {
+                                nextCell.focus();
+                                e.preventDefault();
+                            }
                         }
                     });
                     
