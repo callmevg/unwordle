@@ -55,27 +55,25 @@
         .main-content {
             flex: 1;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             padding: 2rem;
-            gap: 4rem;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
-            min-height: calc(100vh - 60px);
         }
 
         .game-section {
-            flex: 0 1 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .results-section {
-            flex: 1;
-            max-width: 500px;
-            align-self: center;
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            margin-top: 2rem;
         }
 
         .instructions-dialog {
@@ -164,8 +162,9 @@
 
         .buttons {
             display: flex;
-            justify-content: center;
+            justify-content: left;
             margin-top: 20px;
+            gap: 10px;
         }
         
         button {
@@ -182,7 +181,7 @@
         }
 
         .buttons button {
-            margin: 0 10px;
+            margin: 0px;
         }
         
         button:hover {
@@ -224,6 +223,7 @@
             border: 1px solid #222;
             cursor: pointer;
             transition: background-color 0.2s ease;
+            user-select: none;
         }
 
         .word-chip:hover {
@@ -256,20 +256,18 @@
 
         @media (max-width: 900px) {
             .main-content {
-                flex-direction: column;
-                align-items: center;
-                padding: 1rem;
-                gap: 2rem;
-                min-height: auto;
-            }
-
-            .topbar {
                 padding: 1rem;
             }
+        }
 
-            .results-section {
-                width: 100%;
-            }
+        #solveBtn {
+            background-color: #FF7a00;
+            border: none;
+            /* color: black; */
+        }
+        
+        #solveBtn:hover {
+            background-color: #ff9433;
         }
     </style>
 </head>
@@ -792,11 +790,10 @@
         }
 
         function fillWordInGrid(word) {
-            // Find first empty row
             let emptyRow = -1;
             for (let i = 0; i < 6; i++) {
                 const firstCell = document.querySelector(`[data-row="${i}"][data-col="0"]`);
-                if (!firstCell.innerText.trim()) {
+                if (!firstCell.textContent.trim()) {
                     emptyRow = i;
                     break;
                 }
@@ -808,9 +805,10 @@
             }
 
             // Fill the word in the empty row
+            word = word.toUpperCase();
             for (let j = 0; j < 5; j++) {
                 const cell = document.querySelector(`[data-row="${emptyRow}"][data-col="${j}"]`);
-                cell.innerText = word[j];
+                cell.textContent = word[j];
             }
         }
 
