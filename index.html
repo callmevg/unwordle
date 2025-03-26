@@ -146,12 +146,6 @@
 </head>
 <body>
     <h1>Unwordle - Wordle Solver</h1>
-    <div class="instructions">
-        <p>1. Type your Wordle guesses in each row</p>
-        <p>2. Click on each letter to change its color based on Wordle feedback:</p>
-        <p>⚪ → 🟩 (correct spot) → 🟨 (wrong spot) → ⚫ (not in word)</p>
-        <p>3. Click "Solve" to get word suggestions</p>
-    </div>
     
     <div id="wordleGrid" class="grid"></div>
     
@@ -627,5 +621,11 @@
         // Start the app when page loads
         document.addEventListener('DOMContentLoaded', init);
     </script>
+    <div class="instructions">
+        <p>1. Type your Wordle guesses in each row</p>
+        <p>2. Click on each letter to change its color based on Wordle feedback:</p>
+        <p>   🟩 (correct spot) → 🟨 (wrong spot) → ⚫ (not in word)</p>
+        <p>3. Click "Solve" to get word suggestions</p>
+    </div>
 </body>
 </html>
