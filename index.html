@@ -350,19 +350,28 @@
                     // Handle input (only allow single letter)
                     cell.addEventListener('input', (e) => {
                         const text = e.target.innerText.toUpperCase();
+                        // Only allow alphabets
+                        if (text && !/^[A-Z]$/.test(text)) {
+                            e.target.innerText = '';
+                            return;
+                        }
                         if (text.length > 0) {
                             e.target.innerText = text[text.length - 1];
                         }
-                        if (text && /^[A-Z]$/.test(text)) {
+                        if (text) {
                             // Move to next cell
                             const nextCell = document.querySelector(`[data-row="${i}"][data-col="${j + 1}"]`);
                             if (nextCell) nextCell.focus();
                         }
                     });
                     
-                    // Handle color cycling
+                    // Handle color cycling with prevention of text selection
                     cell.addEventListener('click', (e) => {
                         if (e.target.innerText.trim() === '') return;
+                        
+                        // Prevent text selection
+                        e.preventDefault();
+                        window.getSelection().removeAllRanges();
                         
                         if (!cell.classList.contains('green') && 
                             !cell.classList.contains('yellow') && 
@@ -401,18 +410,17 @@
                                 }
                                 return;
                             case 'Backspace':
-                                if (e.target.innerText === '') {
-                                    // If current cell is empty, move to previous cell AND clear it
+                                if (!e.target.textContent || e.target.textContent === '') {
                                     nextCol--;
                                     const prevCell = document.querySelector(`[data-row="${nextRow}"][data-col="${nextCol}"]`);
                                     if (prevCell) {
-                                        prevCell.innerText = '';
+                                        prevCell.textContent = '';
                                         prevCell.focus();
-                                        e.preventDefault(); // Prevent default backspace
                                     }
-                                    return; // Exit early after handling
+                                } else {
+                                    e.target.textContent = '';
                                 }
-                                // For cells with content, let default backspace behavior happen
+                                e.preventDefault();
                                 return;
                         }
                         
@@ -752,44 +760,12 @@
             });
             message.textContent = '';
             results.style.display = 'none';
-        }
-        
-        // Initialize the app
-        function init() {
-            createGrid();
-            solveBtn.addEventListener('click', handleSolve);
-            resetBtn.addEventListener('click', handleReset);
-            
-            document.getElementById('showMoreBtn').addEventListener('click', () => {
-                currentDisplayCount += 10;
-                displayWords(currentFilteredWords, currentDisplayCount);
-            });
-            
-            // Pre-load word list and show initial suggestions
-            loadWordList().then(() => {
-                handleSolve();
-            });
-            
-            document.getElementById('dialogBackdrop').addEventListener('click', toggleInstructions);
+            // Focus first cell after reset
+            const firstCell = document.querySelector('[data-row="0"][data-col="0"]');
+            if (firstCell) firstCell.focus();
         }
 
-        function displayWords(words, count) {
-            suggestions.innerHTML = '';
-            const displayWords = words.slice(0, count);
-            
-            displayWords.forEach(word => {
-                const chip = document.createElement('span');
-                chip.className = 'word-chip';
-                chip.textContent = word;
-                chip.addEventListener('click', () => fillWordInGrid(word));
-                suggestions.appendChild(chip);
-            });
-            
-            const showMoreBtn = document.getElementById('showMoreBtn');
-            showMoreBtn.style.display = words.length > count ? 'block' : 'none';
-        }
-
-        function fillWordInGrid(word) {
+        function fillWordInGrid(word, keepFocus = true) {
             let emptyRow = -1;
             for (let i = 0; i < 6; i++) {
                 const firstCell = document.querySelector(`[data-row="${i}"][data-col="0"]`);
@@ -804,12 +780,58 @@
                 return;
             }
 
-            // Fill the word in the empty row
             word = word.toUpperCase();
             for (let j = 0; j < 5; j++) {
                 const cell = document.querySelector(`[data-row="${emptyRow}"][data-col="${j}"]`);
                 cell.textContent = word[j];
             }
+
+            // Keep focus on clicked element if keepFocus is true
+            if (!keepFocus) {
+                document.activeElement.blur();
+            }
+        }
+
+        // Initialize the app
+        function init() {
+            createGrid();
+            solveBtn.addEventListener('click', handleSolve);
+            resetBtn.addEventListener('click', handleReset);
+            
+            document.getElementById('showMoreBtn').addEventListener('click', () => {
+                currentDisplayCount += 10;
+                displayWords(currentFilteredWords, currentDisplayCount);
+            });
+            
+            // Pre-load word list and show initial suggestions
+            loadWordList().then(() => {
+                handleSolve();
+                // Set initial focus
+                const firstCell = document.querySelector('[data-row="0"][data-col="0"]');
+                if (firstCell) firstCell.focus();
+            });
+            
+            document.getElementById('dialogBackdrop').addEventListener('click', toggleInstructions);
+        }
+
+        function displayWords(words, count) {
+            suggestions.innerHTML = '';
+            const displayWords = words.slice(0, count);
+            
+            displayWords.forEach(word => {
+                const chip = document.createElement('span');
+                chip.className = 'word-chip';
+                chip.textContent = word;
+                chip.tabIndex = 0; // Make chips focusable
+                chip.addEventListener('click', (e) => {
+                    fillWordInGrid(word);
+                    e.target.focus(); // Keep focus on the clicked chip
+                });
+                suggestions.appendChild(chip);
+            });
+            
+            const showMoreBtn = document.getElementById('showMoreBtn');
+            showMoreBtn.style.display = words.length > count ? 'block' : 'none';
         }
 
         function toggleInstructions() {
