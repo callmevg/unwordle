@@ -8,23 +8,103 @@
     <style>
         body {
             font-family: 'Space Mono', monospace;
-            text-align: center;
-            padding: 20px;
-            max-width: 500px;
-            margin: 0 auto;
+            margin: 0;
+            padding: 0;
             background-color: #f4f4f4;
             color: #111;
             line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        
-        h1 {
-            color: #111;
-            font-size: 24px;
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #ddd;
+        }
+
+        .app-title {
+            font-size: 1.2rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            margin-bottom: 40px;
+            margin: 0;
         }
-        
+
+        .instructions-btn {
+            background: none;
+            border: 1px solid #111;
+            padding: 8px 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .game-section {
+            flex: 0 1 auto;
+        }
+
+        .results-section {
+            flex: 1;
+            max-width: 500px;
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instructions-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border: 2px solid #111;
+            max-width: 500px;
+            width: 90%;
+            z-index: 1000;
+        }
+
+        .dialog-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .dialog-close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(5, 60px);
@@ -123,12 +203,12 @@
             font-family: 'Space Mono', monospace;
             font-size: 14px;
             border: 1px solid #222;
-            /* cursor: pointer;
+            cursor: pointer;
             transition: background-color 0.2s ease;
         }
 
         .word-chip:hover {
-            background-color: #e0e0e0; */
+            background-color: #e0e0e0;
         }
         
         #message {
@@ -154,25 +234,55 @@
                 padding: 10px;
             }
         }
+
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .results-section {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Unwordle - Wordle Solver</h1>
-    
-    <div id="wordleGrid" class="grid"></div>
-    
-    <div>
-        <button id="solveBtn">Solve</button>
-        <button id="resetBtn">Reset</button>
+    <div class="topbar">
+        <h1 class="app-title">Unwordle - Wordle Solver</h1>
+        <button class="instructions-btn" onclick="toggleInstructions()">Instructions</button>
     </div>
-    
-    <p id="message"></p>
-    
-    <div id="results" style="display: none;">
-        <h2>Results</h2>
-        <p>Possible words: <span id="wordCount">0</span></p>
-        <div id="suggestions"></div>
-        <button id="showMoreBtn" style="display: none;">Show More</button>
+
+    <div class="main-content">
+        <div class="game-section">
+            <div id="wordleGrid" class="grid"></div>
+            <div>
+                <button id="solveBtn">Solve</button>
+                <button id="resetBtn">Reset</button>
+            </div>
+            <p id="message"></p>
+        </div>
+
+        <div class="results-section">
+            <div id="results" style="display: none;">
+                <h2>Results</h2>
+                <p>Possible words: <span id="wordCount">0</span></p>
+                <div id="suggestions"></div>
+                <button id="showMoreBtn" style="display: none;">Show More</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-backdrop" id="dialogBackdrop"></div>
+    <div class="instructions-dialog" id="instructionsDialog">
+        <button class="dialog-close" onclick="toggleInstructions()">×</button>
+        <h2>How to Use</h2>
+        <div class="instructions">
+            <p>1. Type your Wordle guesses in each row</p>
+            <p>2. Click on each letter to change its color based on Wordle feedback:</p>
+            <p>   🟩 (correct spot) → 🟨 (wrong spot) → ⚫ (not in word)</p>
+            <p>3. Click "Solve" to get word suggestions</p>
+        </div>
     </div>
 
     <script>
@@ -633,55 +743,59 @@
             
             // Pre-load word list
             loadWordList();
+            document.getElementById('dialogBackdrop').addEventListener('click', toggleInstructions);
         }
 
-        // function displayWords(words, count) {
-        //     suggestions.innerHTML = '';
-        //     const displayWords = words.slice(0, count);
+        function displayWords(words, count) {
+            suggestions.innerHTML = '';
+            const displayWords = words.slice(0, count);
             
-        //     displayWords.forEach(word => {
-        //         const chip = document.createElement('span');
-        //         chip.className = 'word-chip';
-        //         chip.textContent = word;
-        //         chip.addEventListener('click', () => fillWordInGrid(word));
-        //         suggestions.appendChild(chip);
-        //     });
+            displayWords.forEach(word => {
+                const chip = document.createElement('span');
+                chip.className = 'word-chip';
+                chip.textContent = word;
+                chip.addEventListener('click', () => fillWordInGrid(word));
+                suggestions.appendChild(chip);
+            });
             
-        //     const showMoreBtn = document.getElementById('showMoreBtn');
-        //     showMoreBtn.style.display = words.length > count ? 'block' : 'none';
-        // }
+            const showMoreBtn = document.getElementById('showMoreBtn');
+            showMoreBtn.style.display = words.length > count ? 'block' : 'none';
+        }
 
-        // function fillWordInGrid(word) {
-        //     // Find first empty row
-        //     let emptyRow = -1;
-        //     for (let i = 0; i < 6; i++) {
-        //         const firstCell = document.querySelector(`[data-row="${i}"][data-col="0"]`);
-        //         if (!firstCell.innerText.trim()) {
-        //             emptyRow = i;
-        //             break;
-        //         }
-        //     }
+        function fillWordInGrid(word) {
+            // Find first empty row
+            let emptyRow = -1;
+            for (let i = 0; i < 6; i++) {
+                const firstCell = document.querySelector(`[data-row="${i}"][data-col="0"]`);
+                if (!firstCell.innerText.trim()) {
+                    emptyRow = i;
+                    break;
+                }
+            }
 
-        //     if (emptyRow === -1) {
-        //         message.textContent = 'No empty rows available';
-        //         return;
-        //     }
+            if (emptyRow === -1) {
+                message.textContent = 'No empty rows available';
+                return;
+            }
 
-        //     // Fill the word in the empty row
-        //     for (let j = 0; j < 5; j++) {
-        //         const cell = document.querySelector(`[data-row="${emptyRow}"][data-col="${j}"]`);
-        //         cell.innerText = word[j];
-        //     }
-        // }
+            // Fill the word in the empty row
+            for (let j = 0; j < 5; j++) {
+                const cell = document.querySelector(`[data-row="${emptyRow}"][data-col="${j}"]`);
+                cell.innerText = word[j];
+            }
+        }
+
+        function toggleInstructions() {
+            const dialog = document.getElementById('instructionsDialog');
+            const backdrop = document.getElementById('dialogBackdrop');
+            const isVisible = dialog.style.display === 'block';
+            
+            dialog.style.display = isVisible ? 'none' : 'block';
+            backdrop.style.display = isVisible ? 'none' : 'block';
+        }
 
         // Start the app when page loads
         document.addEventListener('DOMContentLoaded', init);
     </script>
-    <div class="instructions">
-        <p>1. Type your Wordle guesses in each row</p>
-        <p>2. Click on each letter to change its color based on Wordle feedback:</p>
-        <p>   🟩 (correct spot) → 🟨 (wrong spot) → ⚫ (not in word)</p>
-        <p>3. Click "Solve" to get word suggestions</p>
-    </div>
 </body>
 </html>
