@@ -46,6 +46,7 @@
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s ease;
+            margin: 0;
         }
 
         .instructions-btn:hover {
@@ -249,9 +250,9 @@
                 font-size: 20px;
             }
             
-            body {
+            /* body {
                 padding: 10px;
-            }
+            } */
         }
 
         @media (max-width: 900px) {
@@ -289,8 +290,8 @@
 
         <div class="results-section">
             <div id="results" style="display: none;">
-                <h2>Results</h2>
-                <p>Possible words: <span id="wordCount">0</span></p>
+                <h2>Suggestions</h2>
+                <p>count: <span id="wordCount">0</span></p>
                 <div id="suggestions"></div>
                 <button id="showMoreBtn" style="display: none;">Show More</button>
             </div>
@@ -666,13 +667,8 @@
                     
                     results.style.display = 'block';
                     wordCount.textContent = startWords.length;
-                    suggestions.innerHTML = '';
-                    startWords.forEach(word => {
-                        const chip = document.createElement('span');
-                        chip.className = 'word-chip';
-                        chip.textContent = word;
-                        suggestions.appendChild(chip);
-                    });
+                    currentFilteredWords = startWords;
+                    displayWords(startWords, startWords.length);
                     return;
                 }
                 
