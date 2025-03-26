@@ -20,7 +20,7 @@
             --text-color: #111;
             --surface-color: #fff;
             --border-color: #111;
-            --accent-color: #00FF00;
+            --accent-color: #FF7A00;
             --secondary-accent: #FF7A00;
             --cell-border: #222;
             --hover-color: #f0f0f0;
@@ -32,7 +32,7 @@
             --text-color: #fff;
             --surface-color: #222;
             --border-color: #444;
-            --accent-color: #00FF00;
+            --accent-color: #FF7A00;
             --secondary-accent: #FF7A00;
             --cell-border: #444;
             --hover-color: #333;
@@ -121,7 +121,8 @@
             font-weight: 700;
             letter-spacing: -0.5px;
             margin: 0;
-            /* color: #00FF00; */
+            color: var(--accent-color);
+            cursor: pointer;
         }
 
         .instructions-btn {
@@ -390,7 +391,7 @@
 </head>
 <body>
     <div class="topbar">
-        <h1 class="app-title">Unwordle</h1>
+        <h1 class="app-title" onclick="window.location.reload()">Unwordle</h1>
         <div class="topbar-buttons">
             <button class="instructions-btn" onclick="toggleInstructions()">Instructions</button>
             <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
@@ -893,10 +894,13 @@
                 cell.classList.remove('green', 'yellow', 'gray');
             });
             message.textContent = '';
-            results.style.display = 'none';
+            
             // Focus first cell after reset
             const firstCell = document.querySelector('[data-row="0"][data-col="0"]');
             if (firstCell) firstCell.focus();
+            
+            // Show initial suggestions after reset
+            handleSolve();
         }
 
         function fillWordInGrid(word, keepFocus = true) {
