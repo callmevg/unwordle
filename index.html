@@ -107,6 +107,12 @@
             background-color: white;
             border: 2px solid #111;
         }
+
+        #showMoreBtn {
+            margin-top: 15px;
+            font-size: 12px;
+            padding: 8px 16px;
+        }
         
         .word-chip {
             background-color: #f0f0f0;
@@ -160,6 +166,7 @@
         <h2>Results</h2>
         <p>Possible words: <span id="wordCount">0</span></p>
         <div id="suggestions"></div>
+        <button id="showMoreBtn" style="display: none;">Show More</button>
     </div>
 
     <script>
@@ -322,7 +329,7 @@
                 return wordListCache;
             } catch (error) {
                 console.error('Error loading words.json:', error);
-                message.textContent = `Error: ${error.message}. Check that words.json exists and contains valid words.`;
+                message.textContent = `Error: ${error.message}.`;
                 throw error; // Re-throw to halt execution instead of falling back
             }
         }
@@ -528,22 +535,17 @@
                 const filteredWords = filterWordList(wordList, guesses);
                 const bestWords = getBestSuggestions(filteredWords, 20);
                 
+                currentFilteredWords = filteredWords;
+                currentDisplayCount = INITIAL_DISPLAY_COUNT;
+                
                 results.style.display = 'block';
                 wordCount.textContent = filteredWords.length;
-                suggestions.innerHTML = '';
                 
-                if (bestWords.length === 0) {
-                    const chip = document.createElement('span');
-                    chip.className = 'word-chip';
-                    chip.textContent = 'No matching words found';
-                    suggestions.appendChild(chip);
+                if (filteredWords.length === 0) {
+                    suggestions.innerHTML = '<span class="word-chip">No matching words found</span>';
+                    document.getElementById('showMoreBtn').style.display = 'none';
                 } else {
-                    bestWords.forEach(word => {
-                        const chip = document.createElement('span');
-                        chip.className = 'word-chip';
-                        chip.textContent = word;
-                        suggestions.appendChild(chip);
-                    });
+                    displayWords(filteredWords, currentDisplayCount);
                 }
             } catch (error) {
                 console.error('Error processing results:', error);
@@ -613,6 +615,11 @@
             createGrid();
             solveBtn.addEventListener('click', handleSolve);
             resetBtn.addEventListener('click', handleReset);
+            
+            document.getElementById('showMoreBtn').addEventListener('click', () => {
+                currentDisplayCount += 10;
+                displayWords(currentFilteredWords, currentDisplayCount);
+            });
             
             // Pre-load word list
             loadWordList();
