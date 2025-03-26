@@ -123,6 +123,12 @@
             font-family: 'Space Mono', monospace;
             font-size: 14px;
             border: 1px solid #222;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .word-chip:hover {
+            background-color: #e0e0e0;
         }
         
         #message {
@@ -623,6 +629,45 @@
             
             // Pre-load word list
             loadWordList();
+        }
+        
+        function displayWords(words, count) {
+            suggestions.innerHTML = '';
+            const displayWords = words.slice(0, count);
+            
+            displayWords.forEach(word => {
+                const chip = document.createElement('span');
+                chip.className = 'word-chip';
+                chip.textContent = word;
+                chip.addEventListener('click', () => fillWordInGrid(word));
+                suggestions.appendChild(chip);
+            });
+            
+            const showMoreBtn = document.getElementById('showMoreBtn');
+            showMoreBtn.style.display = words.length > count ? 'block' : 'none';
+        }
+
+        function fillWordInGrid(word) {
+            // Find first empty row
+            let emptyRow = -1;
+            for (let i = 0; i < 6; i++) {
+                const firstCell = document.querySelector(`[data-row="${i}"][data-col="0"]`);
+                if (!firstCell.innerText.trim()) {
+                    emptyRow = i;
+                    break;
+                }
+            }
+
+            if (emptyRow === -1) {
+                message.textContent = 'No empty rows available';
+                return;
+            }
+
+            // Fill the word in the empty row
+            for (let j = 0; j < 5; j++) {
+                const cell = document.querySelector(`[data-row="${emptyRow}"][data-col="${j}"]`);
+                cell.innerText = word[j];
+            }
         }
         
         // Start the app when page loads
