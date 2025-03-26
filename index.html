@@ -176,6 +176,10 @@
     </div>
 
     <script>
+        const INITIAL_DISPLAY_COUNT = 10;
+        let currentDisplayCount = INITIAL_DISPLAY_COUNT;
+        let currentFilteredWords = [];
+
         // Constants for color feedback
         const CORRECT = 'green';
         const PRESENT = 'yellow';
