@@ -821,16 +821,21 @@
                     return;
                 }
 
-                // Convert uncolored cells to gray
+                // Convert uncolored cells to gray and check for uncolored cells
+                let hasUncoloredCells = false;
                 guesses.forEach(guess => {
-                    guess.feedback = guess.feedback.map(f => f || ABSENT);
+                    guess.feedback = guess.feedback.map(f => {
+                        if (f === '' && guess.word.trim()) {
+                            hasUncoloredCells = true;
+                            return ABSENT;
+                        }
+                        return f;
+                    });
                 });
 
-                // Show message about uncolored cells being treated as gray
-                const hasUncoloredCells = guesses.some(guess => 
-                    guess.word.trim() && guess.feedback.includes(''));
                 if (hasUncoloredCells) {
-                    message.textContent = 'Note: Uncolored letters are treated as gray (not in word).';
+                    message.textContent = 'Note: Uncolored letters are treated as gray (not in word)';
+                    message.style.color = '#666'; // Make it less alarming than error messages
                 }
                 
                 // Case C: Process input with color coding
