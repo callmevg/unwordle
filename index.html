@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap">
     <style>
         :root {
-            --bg-color: #f4f4f4;
+            --bg-color: lch(96.19% 0.01 296.81);
             --text-color: #111;
             --surface-color: #fff;
             --border-color: #111;
@@ -699,19 +699,10 @@
                         message: `Row ${guess.row + 1} has incomplete letters. Fill all 5 letters.`
                     };
                 }
-                
-                // Check if any letter is missing color
-                if (guess.feedback.includes('')) {
-                    return {
-                        valid: false,
-                        message: `Row ${guess.row + 1} has letters without colors. Click each letter to set its color.`
-                    };
-                }
             }
-            
             return { valid: true };
         }
-        
+
         // Filter words based on guesses
         function filterWordList(wordList, guesses) {
             return wordList.filter(word => {
@@ -806,7 +797,6 @@
             try {
                 const wordList = await loadWordList();
                 
-                // Only proceed if we have words
                 if (!wordList || wordList.length === 0) {
                     message.textContent = 'Error: No words loaded from words.json';
                     return;
@@ -814,11 +804,9 @@
                 
                 const guesses = getGuesses();
                 
-                // Case A: No input, suggest starting words from the word list
+                // Case A: No input, suggest starting words
                 if (guesses.length === 0) {
-                    // Get good starting words from the word list based on letter frequency
                     const startWords = getGoodStartingWords(wordList);
-                    
                     results.style.display = 'block';
                     wordCount.textContent = startWords.length;
                     currentFilteredWords = startWords;
@@ -826,11 +814,23 @@
                     return;
                 }
                 
-                // Case B: Input without complete color coding
+                // Case B: Input without complete words
                 const validation = validateGuesses(guesses);
                 if (!validation.valid) {
                     message.textContent = validation.message;
                     return;
+                }
+
+                // Convert uncolored cells to gray
+                guesses.forEach(guess => {
+                    guess.feedback = guess.feedback.map(f => f || ABSENT);
+                });
+
+                // Show message about uncolored cells being treated as gray
+                const hasUncoloredCells = guesses.some(guess => 
+                    guess.word.trim() && guess.feedback.includes(''));
+                if (hasUncoloredCells) {
+                    message.textContent = 'Note: Uncolored letters are treated as gray (not in word).';
                 }
                 
                 // Case C: Process input with color coding
