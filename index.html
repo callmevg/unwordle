@@ -4,14 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unwordle - Wordle Solver</title>
+  
+    <Load configuration file first (excluded from Git)cons -->
+<script src="config.js"></script>
     
-    <!-- Favicons -->
-    <link rel="icon" type="image/x-icon" href="assets/logo_32.ico">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/logo_16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/logo_32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/logo_192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="assets/logo_512.png">
-    <link rel="apple-touch-icon" href="assets/logo_192.png">
+    <!-- Google Analytics -->
+    <script>
+    (function() {
+        // Only load if configuration exists and has an analytics ID
+        if (typeof CONFIG !== 'undefined' && CONFIG.ANALYTICS_ID) {
+            // Google Analytics tag (gtag.js)
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${CONFIG.ANALYTICS_ID}`;
+            document.head.appendChild(script);
+            
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', CONFIG.ANALYTICS_ID);
+            
+            console.log('Analytics initialized');
+        }
+    })();
+    </script>
+">
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap">
     <style>
@@ -299,10 +316,11 @@
         #results {
             /* margin-top: 40px; */
             text-align: left;
-            padding: 20px;
+            padding: 20px 12px 20px 20px;
             background-color: var(--surface-color);
             border: 2px solid var(--border-color);
             color: var(--text-color);
+            width: fit-content;
         }
 
         #showMoreBtn {
@@ -337,6 +355,10 @@
             min-height: 20px;
             margin: 15px 0;
             font-size: 14px;
+        }
+
+        #suggestions {
+            width: fit-content;
         }
         
         @media (max-width: 500px) {
