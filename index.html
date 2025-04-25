@@ -3,7 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unwordle - Wordle Solver</title>
+    <title>Unwordle - Wordle Solver | Find Wordle Answers Fast</title>
+    <meta name="description" content="Unwordle is a free tool that helps you solve Wordle puzzles. Enter your guesses and color patterns to get the best word suggestions and solve Wordle games easily.">
+    <meta name="keywords" content="wordle solver, wordle helper, unwordle, word game solver, wordle answers, daily wordle solver, word game assistant, unwordle github">
+    <meta name="author" content="Vaibhav">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://vaibhavgupta.co.in/unwordle">
+    <meta property="og:title" content="Unwordle - Wordle Solver | Find Wordle Answers Fast">
+    <meta property="og:description" content="Unwordle is a free tool that helps you solve Wordle puzzles. Enter your guesses and color patterns to get the best word suggestions.">
+    <meta property="og:image" content="https://vaibhavgupta.co.in/unwordle/assets/logo_512.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://vaibhavgupta.co.in/unwordle">
+    <meta property="twitter:title" content="Unwordle - Wordle Solver | Find Wordle Answers Fast">
+    <meta property="twitter:description" content="Unwordle is a free tool that helps you solve Wordle puzzles. Enter your guesses and color patterns to get the best word suggestions.">
+    <meta property="twitter:image" content="https://vaibhavgupta.co.in/unwordle/assets/logo_512.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://vaibhavgupta.co.in/unwordle">
     
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="assets/logo_32.ico">
@@ -22,6 +43,30 @@
     </script>
     <!-- End Google Analytics -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Unwordle",
+        "description": "A tool that helps solve Wordle puzzles by providing word suggestions based on your guesses and feedback.",
+        "applicationCategory": "GameApplication",
+        "url": "https://vaibhavgupta.co.in/unwordle",
+        "author": {
+            "@type": "Person",
+            "name": "Vaibhav",
+            "url": "https://vaibhavgupta.co.in/"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "screenshot": "https://vaibhavgupta.co.in/unwordle/assets/logo_512.png"
+    }
+    </script>
+    
     <style>
         :root {
             --bg-color: lch(96.19% 0.01 296.81);
@@ -436,29 +481,29 @@
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="game-section">
+    <main class="main-content">
+        <article class="game-section">
             <div id="wordleGrid" class="grid"></div>
             <div class="buttons">
                 <button id="solveBtn">Solve</button>
                 <button id="resetBtn">Reset</button>
             </div>
             <p id="message"></p>
-        </div>
+        </article>
 
-        <div class="results-section">
+        <section class="results-section">
             <div id="results" style="display: none;">
                 <h2>Suggestions</h2>
                 <p>count: <span id="wordCount">0</span></p>
                 <div id="suggestions"></div>
                 <button id="showMoreBtn" style="display: none;">Show More</button>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
-    <div class="footer">
+    <footer class="footer">
         Made with ❤️ by <a href="https://vaibhavgupta.co.in/" target="_blank">Vaibhav</a> and AI<br>
-    </div>
+    </footer>
 
     <div class="dialog-backdrop" id="dialogBackdrop"></div>
     <div class="instructions-dialog" id="instructionsDialog">
