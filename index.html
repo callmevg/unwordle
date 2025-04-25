@@ -11,20 +11,20 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://vaibhavgupta.co.in/unwordle">
+    <meta property="og:url" content="https://vaibhavgupta.co.in/unwordle/">
     <meta property="og:title" content="Unwordle - Wordle Solver | Find Wordle Answers Fast">
     <meta property="og:description" content="Unwordle is a free tool that helps you solve Wordle puzzles. Enter your guesses and color patterns to get the best word suggestions.">
-    <meta property="og:image" content="https://callmevg.github.io/unwordle/assets/logo_512.png">
+    <meta property="og:image" content="https://vaibhavgupta.co.in/unwordle/assets/logo_512.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://vaibhavgupta.co.in/unwordle">
+    <meta property="twitter:url" content="https://vaibhavgupta.co.in/unwordle/">
     <meta property="twitter:title" content="Unwordle - Wordle Solver | Find Wordle Answers Fast">
     <meta property="twitter:description" content="Unwordle is a free tool that helps you solve Wordle puzzles. Enter your guesses and color patterns to get the best word suggestions.">
-    <meta property="twitter:image" content="https://callmevg.github.io/unwordle/assets/logo_512.png">
+    <meta property="twitter:image" content="https://vaibhavgupta.co.in/unwordle/assets/logo_512.png">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://vaibhavgupta.co.in/unwordle">
+    <link rel="canonical" href="https://vaibhavgupta.co.in/unwordle/">
     
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="assets/logo_32.ico">
@@ -52,7 +52,7 @@
         "name": "Unwordle",
         "description": "A tool that helps solve Wordle puzzles by providing word suggestions based on your guesses and feedback.",
         "applicationCategory": "GameApplication",
-        "url": "https://vaibhavgupta.co.in/unwordle",
+        "url": "https://vaibhavgupta.co.in/unwordle/",
         "author": {
             "@type": "Person",
             "name": "Vaibhav",
@@ -63,7 +63,7 @@
             "price": "0",
             "priceCurrency": "USD"
         },
-        "screenshot": "https://callmevg.github.io/unwordle/assets/logo_512.png"
+        "screenshot": "https://vaibhavgupta.co.in/unwordle/assets/logo_512.png"
     }
     </script>
     
@@ -652,15 +652,15 @@
             if (wordListCache) return wordListCache;
             
             try {
-                console.log("Loading words from words.json...");
+                console.log("Loading words...");
                 const response = await fetch('words.json');
                 
                 if (!response.ok) {
-                    throw new Error(`Failed to load words.json: ${response.status} ${response.statusText}`);
+                    throw new Error(`Failed to load words: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
-                console.log("Successfully loaded words.json");
+                console.log("Successfully loaded");
                 
                 // Extract words from different possible JSON formats
                 let words = [];
@@ -671,7 +671,7 @@
                     words = Object.keys(data);
                     console.log("Loaded words from object keys");
                 } else {
-                    throw new Error(`Unexpected data format in words.json: ${typeof data}`);
+                    throw new Error(`Unexpected data format: ${typeof data}`);
                 }
                 
                 // Filter to ensure all words are 5 letters
@@ -679,7 +679,7 @@
                 console.log(`Found ${filteredWords.length} valid 5-letter words out of ${words.length} total`);
                 
                 if (filteredWords.length === 0) {
-                    throw new Error("No valid 5-letter words found in words.json");
+                    throw new Error("No valid 5-letter words found");
                 }
                 
                 // Convert to uppercase
@@ -688,7 +688,7 @@
                 
                 return wordListCache;
             } catch (error) {
-                console.error('Error loading words.json:', error);
+                console.error('Error loading words:', error);
                 message.textContent = `Error: ${error.message}.`;
                 throw error; // Re-throw to halt execution instead of falling back
             }
@@ -851,7 +851,7 @@
                 const wordList = await loadWordList();
                 
                 if (!wordList || wordList.length === 0) {
-                    message.textContent = 'Error: No words loaded from words.json';
+                    message.textContent = 'Error: No words loaded';
                     return;
                 }
                 
@@ -909,7 +909,7 @@
                 }
             } catch (error) {
                 console.error('Error processing results:', error);
-                message.textContent = 'Error finding matches. Make sure words.json exists and is valid.';
+                message.textContent = 'Error finding matches';
             }
         }
         
